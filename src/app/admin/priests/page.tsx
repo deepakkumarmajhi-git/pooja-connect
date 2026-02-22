@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 type PriestItem = {
   priestProfileId: string;
@@ -28,8 +31,8 @@ export default function AdminPriestsPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || "Failed");
       setItems(data.items || []);
-    } catch (e: any) {
-      setMsg(e?.message || "Error loading priests");
+    } catch (e: unknown) {
+      setMsg(e instanceof Error ? e.message : "Error loading priests");
     } finally {
       setLoading(false);
     }
@@ -59,24 +62,24 @@ export default function AdminPriestsPage() {
     load();
   }
 
-  return (
-    <div style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Priest Approvals</h1>
+  const badgeVariant = (s: string) => {
+    if (s === "APPROVED") return "success";
+    if (s === "REJECTED" || s === "SUSPENDED") return "destructive";
+    return "warning";
+  };
 
-      <div style={{ marginTop: 12, display: "flex", gap: 10, flexWrap: "wrap" }}>
+  return (
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Priest Approvals</h1>
+      <p className="mt-2 text-[var(--muted-foreground)]">Filter by status and approve, reject, or suspend priests.</p>
+
+      <div className="mt-6 flex flex-wrap gap-2">
         {["PENDING", "APPROVED", "REJECTED", "SUSPENDED"].map((s) => (
           <button
             key={s}
+            type="button"
             onClick={() => setStatus(s)}
-            style={{
-              padding: "8px 12px",
-              borderRadius: 10,
-              border: "1px solid #e5e5e5",
-              background: status === s ? "#000" : "#fff",
-              color: status === s ? "#fff" : "#000",
-              fontWeight: 800,
-              cursor: "pointer",
-            }}
+            className={`rounded-lg border px-4 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${status === s ? "bg-[var(--accent)] text-[var(--accent-foreground)] border-transparent" : "border-[var(--border)] bg-[var(--card)] hover:bg-slate-50"}`}
           >
             {s}
           </button>
@@ -84,66 +87,43 @@ export default function AdminPriestsPage() {
       </div>
 
       {msg ? (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 10, background: "#f6f6f6" }}>{msg}</div>
+        <div className="mt-6 rounded-lg border border-[var(--border)] bg-slate-50 p-4 text-sm dark:bg-slate-800" role="alert">{msg}</div>
       ) : null}
 
       {loading ? (
-        <div style={{ marginTop: 18 }}>Loading...</div>
-      ) : (
-        <div style={{ marginTop: 18, display: "grid", gap: 12 }}>
-          {items.length === 0 ? (
-            <div style={{ color: "#666" }}>No priests in {status}.</div>
-          ) : (
-            items.map((p) => (
-              <div
-                key={p.priestProfileId}
-                style={{
-                  border: "1px solid #e5e5e5",
-                  borderRadius: 14,
-                  padding: 14,
-                  display: "grid",
-                  gap: 8,
-                }}
-              >
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                  <div style={{ fontWeight: 900 }}>{p.name || "Unnamed Priest"}</div>
-                  <div style={{ fontWeight: 800 }}>{p.approvalStatus}</div>
-                </div>
-
-                <div style={{ color: "#444" }}>
-                  <div><b>Email:</b> {p.email}</div>
-                  <div><b>Phone:</b> {p.phone || "—"}</div>
-                  <div><b>Location:</b> {p.city}, {p.area || "—"}</div>
-                </div>
-
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
-                  <button
-                    onClick={() => updateStatus(p.priestProfileId, "APPROVE")}
-                    style={{ padding: "8px 12px", borderRadius: 10, border: "none", background: "#0b5", color: "white", fontWeight: 900, cursor: "pointer" }}
-                  >
-                    Approve
-                  </button>
-                  <button
-                    onClick={() => updateStatus(p.priestProfileId, "REJECT")}
-                    style={{ padding: "8px 12px", borderRadius: 10, border: "none", background: "#d33", color: "white", fontWeight: 900, cursor: "pointer" }}
-                  >
-                    Reject
-                  </button>
-                  <button
-                    onClick={() => updateStatus(p.priestProfileId, "SUSPEND")}
-                    style={{ padding: "8px 12px", borderRadius: 10, border: "1px solid #e5e5e5", background: "white", color: "black", fontWeight: 900, cursor: "pointer" }}
-                  >
-                    Suspend
-                  </button>
-                </div>
-
-                <div style={{ fontSize: 12, color: "#666" }}>
-                  Created: {new Date(p.createdAt).toLocaleString()}
-                </div>
-              </div>
-            ))
-          )}
+        <div className="mt-8 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}><CardContent className="py-6"><div className="h-5 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" /><div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-800" /></CardContent></Card>
+          ))}
         </div>
+      ) : items.length === 0 ? (
+        <Card className="mt-8"><CardContent className="py-10 text-center text-[var(--muted-foreground)]">No priests in {status}.</CardContent></Card>
+      ) : (
+        <ul className="mt-8 grid gap-4">
+          {items.map((p) => (
+            <li key={p.priestProfileId}>
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold">{p.name || "Unnamed Priest"}</span>
+                    <Badge variant={badgeVariant(p.approvalStatus)}>{p.approvalStatus}</Badge>
+                  </div>
+                  <div className="mt-2 text-sm text-[var(--muted-foreground)]">
+                    <p><strong>Email:</strong> {p.email}</p>
+                    <p><strong>Phone:</strong> {p.phone || "—"}</p>
+                    <p><strong>Location:</strong> {p.city}, {p.area || "—"}</p>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700" onClick={() => updateStatus(p.priestProfileId, "APPROVE")}>Approve</Button>
+                    <Button size="sm" variant="destructive" onClick={() => updateStatus(p.priestProfileId, "REJECT")}>Reject</Button>
+                    <Button size="sm" variant="outline" onClick={() => updateStatus(p.priestProfileId, "SUSPEND")}>Suspend</Button>
+                  </div>
+                  <p className="mt-2 text-xs text-[var(--muted-foreground)]">Created: {new Date(p.createdAt).toLocaleString()}</p>
+                </CardHeader>
+              </Card>
+            </li>
+          ))}
+        </ul>
       )}
     </div>
   );

@@ -29,31 +29,38 @@ function money(n: any) {
 
 function StatusBadge({ status }: { status: string }) {
   const s = String(status || "").toUpperCase();
-
   const label =
     s === "PENDING_PRIEST"
       ? "Pending priest confirmation"
       : s === "CONFIRMED"
-      ? "Confirmed"
-      : s === "COMPLETED"
-      ? "Completed"
-      : s === "CANCELLED"
-      ? "Cancelled"
-      : s === "REJECTED"
-      ? "Rejected"
-      : s || "Unknown";
-
-  const tone =
+        ? "Confirmed"
+        : s === "COMPLETED"
+          ? "Completed"
+          : s === "CANCELLED"
+            ? "Cancelled"
+            : s === "REJECTED"
+              ? "Rejected"
+              : s || "Unknown";
+  const variant =
     s === "CONFIRMED"
-      ? "border-green-500/30 bg-green-500/10 text-green-100"
+      ? "success"
       : s === "COMPLETED"
-      ? "border-blue-500/30 bg-blue-500/10 text-blue-100"
-      : s === "CANCELLED" || s === "REJECTED"
-      ? "border-red-500/30 bg-red-500/10 text-red-100"
-      : "border-yellow-500/30 bg-yellow-500/10 text-yellow-100";
-
+        ? "secondary"
+        : s === "CANCELLED" || s === "REJECTED"
+          ? "destructive"
+          : "warning";
   return (
-    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs ${tone}`}>
+    <span
+      className={`inline-flex items-center rounded-full border px-3 py-1 text-xs ${
+        variant === "success"
+          ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-800 dark:text-emerald-400"
+          : variant === "destructive"
+            ? "border-red-500/30 bg-red-500/10 text-red-800 dark:text-red-400"
+            : variant === "warning"
+              ? "border-amber-500/30 bg-amber-500/10 text-amber-800 dark:text-amber-400"
+              : "border-slate-500/30 bg-slate-500/10 text-slate-800 dark:text-slate-400"
+      }`}
+    >
       {label}
     </span>
   );
@@ -104,28 +111,32 @@ export default function BookingDetailsPage() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <p className="text-sm text-muted-foreground">Loading booking…</p>
+      <div className="container-main py-10">
+        <div className="mx-auto max-w-5xl">
+          <div className="h-8 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+          <div className="mt-6 h-64 animate-pulse rounded-xl bg-slate-200 dark:bg-slate-800" />
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <div className="rounded-2xl border p-6">
-          <h1 className="text-xl font-semibold">Booking</h1>
-          <p className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm">
-            {error}
-          </p>
+      <div className="container-main py-10">
+        <div className="mx-auto max-w-2xl rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-950/20">
+          <h1 className="text-xl font-semibold text-red-800 dark:text-red-400">Booking</h1>
+          <p className="mt-3 text-sm text-red-700 dark:text-red-300">{error}</p>
           <div className="mt-4 flex gap-3">
             <button
               onClick={() => window.location.reload()}
-              className="rounded-xl bg-black px-4 py-2 text-sm text-white"
+              className="rounded-xl bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
             >
               Retry
             </button>
-            <Link href="/dashboard" className="rounded-xl border px-4 py-2 text-sm">
+            <Link
+              href="/dashboard/customer"
+              className="rounded-xl border border-[var(--border)] px-4 py-2 text-sm font-medium hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+            >
               Back to Dashboard
             </Link>
           </div>

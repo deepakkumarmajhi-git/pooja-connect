@@ -1,4 +1,8 @@
+import Link from "next/link";
 import { headers } from "next/headers";
+import { MapPin, User } from "lucide-react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type Priest = {
   priestId: string;
@@ -12,80 +16,86 @@ type Priest = {
 };
 
 async function getBaseUrl() {
-  const h = await headers(); // IMPORTANT: headers() is async in your Next.js version
-  const host = h.get("host"); // e.g. localhost:3000
+  const h = await headers();
+  const host = h.get("host");
   const proto = h.get("x-forwarded-proto") || "http";
-
-  // Fallbacks (important in dev / edge cases)
   if (!host) return process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
   return `${proto}://${host}`;
 }
 
 async function getPriests(): Promise<Priest[]> {
   const baseUrl = await getBaseUrl();
-
-  const res = await fetch(`${baseUrl}/api/priests`, {
-    cache: "no-store",
-  });
-
+  const res = await fetch(`${baseUrl}/api/priests`, { cache: "no-store" });
   const contentType = res.headers.get("content-type") || "";
   if (!res.ok || !contentType.includes("application/json")) return [];
-
   const data = await res.json();
   return data.items || [];
 }
 
 export default async function PriestsPage() {
-  const priests = await getPriests();
+  let priests: Priest[] = [];
+  let error: string | null = null;
+  try {
+    priests = await getPriests();
+  } catch (e) {
+    error = e instanceof Error ? e.message : "Failed to load priests";
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-950/20">
+        <h2 className="text-lg font-semibold text-red-800 dark:text-red-400">Something went wrong</h2>
+        <p className="mt-2 text-sm text-red-700 dark:text-red-300">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1000, margin: "0 auto" }}>
-      <h1 style={{ fontSize: 28, fontWeight: 900 }}>Priests</h1>
-      <p style={{ marginTop: 6, color: "#666" }}>Verified and approved priests.</p>
+    <div>
+      <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)] md:text-3xl">
+        Priests
+      </h1>
+      <p className="mt-2 text-[var(--muted-foreground)]">
+        Verified and approved priests.
+      </p>
 
-      <div style={{ marginTop: 14, display: "grid", gap: 12 }}>
-        {priests.length === 0 ? (
-          <div style={{ color: "#666" }}>No approved priests found yet.</div>
-        ) : (
-          priests.map((p) => (
-            <div
-              key={p.priestId}
-              style={{ border: "1px solid #e5e5e5", borderRadius: 14, padding: 14 }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ fontWeight: 900 }}>{p.name}</div>
-                <div style={{ color: "#444" }}>{p.experienceYears} yrs exp</div>
-              </div>
-
-              <div style={{ marginTop: 6, color: "#666" }}>
-                {p.city}{p.area ? `, ${p.area}` : ""}
-              </div>
-
-              <div style={{ marginTop: 6, color: "#666" }}>
-                Languages: {p.languages?.length ? p.languages.join(", ") : "—"}
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <a
-                  href={`/priests/${p.priestId}`}
-                  style={{
-                    textDecoration: "none",
-                    padding: "10px 14px",
-                    borderRadius: 10,
-                    border: "1px solid #e5e5e5",
-                    fontWeight: 900,
-                    color: "black",
-                    display: "inline-block",
-                  }}
-                >
-                  View Profile
-                </a>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      {priests.length === 0 ? (
+        <Card className="mt-8">
+          <CardContent className="py-12 text-center text-[var(--muted-foreground)]">
+            No approved priests found yet. Check back later.
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {priests.map((p) => (
+            <Card key={p.priestId} className="flex flex-col">
+              <CardHeader className="pb-2">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="font-semibold text-[var(--foreground)]">{p.name}</h2>
+                  <span className="text-sm text-[var(--muted-foreground)]">
+                    {p.experienceYears} yrs exp
+                  </span>
+                </div>
+                <p className="flex items-center gap-1 text-sm text-[var(--muted-foreground)]">
+                  <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+                  {p.city}{p.area ? `, ${p.area}` : ""}
+                </p>
+                <p className="text-xs text-[var(--muted-foreground)]">
+                  Languages: {p.languages?.length ? p.languages.join(", ") : "—"}
+                </p>
+              </CardHeader>
+              <CardContent className="mt-auto pt-0">
+                <Link href={`/priests/${p.priestId}`}>
+                  <Button variant="outline" size="sm" className="w-full sm:w-auto">
+                    <User className="mr-1.5 h-4 w-4" aria-hidden />
+                    View Profile
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

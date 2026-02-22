@@ -2,8 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
-type Booking = any;
+type Booking = Record<string, unknown>;
 
 export default function CustomerUpcomingPage() {
   const search = useSearchParams();
@@ -11,10 +15,11 @@ export default function CustomerUpcomingPage() {
   const priestServiceId = search.get("service") || "";
 
   const bookingType = priestServiceId ? "PICK_PRIEST" : "AUTO_ASSIGN";
-  const showBookingForm = Boolean(bookSlug); // show for both pick-priest + auto-assign
+  const showBookingForm = Boolean(bookSlug);
 
   const [items, setItems] = useState<Booking[]>([]);
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
 
   // booking form
   const [mode, setMode] = useState<"HOME" | "ONLINE">("HOME");
@@ -43,7 +48,8 @@ export default function CustomerUpcomingPage() {
   }
 
   useEffect(() => {
-    loadBookings();
+    setLoading(true);
+    loadBookings().finally(() => setLoading(false));
   }, []);
 
   const canSubmit = useMemo(() => {
@@ -108,11 +114,12 @@ export default function CustomerUpcomingPage() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1000 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Upcoming Pujas</h1>
+    <div className="max-w-4xl">
+      <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Upcoming Pujas</h1>
+      <p className="mt-2 text-[var(--muted-foreground)]">Create a booking or view your existing bookings.</p>
 
       {msg ? (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 10, background: "#f6f6f6" }}>
+        <div className="mt-6 rounded-lg border border-[var(--border)] bg-slate-50 p-4 text-sm dark:bg-slate-800" role="alert">
           {msg}
         </div>
       ) : null}
@@ -254,30 +261,34 @@ export default function CustomerUpcomingPage() {
         </div>
       )}
 
-      <div style={{ marginTop: 18 }}>
-        <h2 style={{ fontSize: 18, fontWeight: 900 }}>My Bookings</h2>
-
-        <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-          {items.length === 0 ? (
-            <div style={{ color: "#666" }}>No bookings yet.</div>
-          ) : (
-            items.map((b: any) => (
-              <div key={String(b._id)} style={{ border: "1px solid #e5e5e5", borderRadius: 14, padding: 14 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                  <div style={{ fontWeight: 900 }}>{b.catalogSlug}</div>
-                  <div style={{ fontWeight: 900 }}>{b.status}</div>
-                </div>
-                <div style={{ marginTop: 6, color: "#444" }}>
-                  Mode: {b.mode} • Scheduled: {new Date(b.scheduledAt).toLocaleString()}
-                </div>
-                <div style={{ marginTop: 6, color: "#666" }}>
-                  Total: ₹{b?.pricing?.total} • Payment: {b?.payment?.status}
-                </div>
+      <section className="mt-10" aria-labelledby="my-bookings">
+        <h2 id="my-bookings" className="text-lg font-semibold text-[var(--foreground)]">My Bookings</h2>
+        {loading ? (
+          <div className="mt-4 space-y-4">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-5">
+                <div className="h-5 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
               </div>
-            ))
-          )}
-        </div>
-      </div>
+            ))}
+          </div>
+        ) : items.length === 0 ? (
+          <div className="mt-4 rounded-xl border border-[var(--border)] bg-[var(--card)] py-10 text-center text-[var(--muted-foreground)]">No bookings yet.</div>
+        ) : (
+          <ul className="mt-4 grid gap-4">
+            {items.map((b: Booking) => (
+              <li key={String(b._id)} className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="font-semibold">{String(b.catalogSlug)}</span>
+                  <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium dark:bg-slate-800">{String(b.status)}</span>
+                </div>
+                <p className="mt-2 text-sm text-[var(--muted-foreground)]">Mode: {String(b.mode)} • Scheduled: {b.scheduledAt ? new Date(b.scheduledAt as string).toLocaleString() : "—"}</p>
+                <p className="text-xs text-[var(--muted-foreground)]">Total: ₹{(b.pricing as { total?: number })?.total ?? "—"} • Payment: {(b.payment as { status?: string })?.status ?? "—"}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }

@@ -211,23 +211,29 @@ export default function BookPage() {
 
     if (loading) {
         return (
-            <div className="mx-auto max-w-3xl px-4 py-10">
-                <p className="text-sm text-muted-foreground">Loading booking form...</p>
+            <div className="container-main py-10">
+                <div className="mx-auto max-w-3xl animate-pulse space-y-6">
+                    <div className="h-8 w-48 rounded bg-slate-200 dark:bg-slate-800" />
+                    <div className="h-4 w-full max-w-md rounded bg-slate-200 dark:bg-slate-800" />
+                    <div className="h-64 rounded-xl border border-[var(--border)] bg-[var(--card)]" />
+                </div>
             </div>
         );
     }
 
     if (error) {
         return (
-            <div className="mx-auto max-w-3xl px-4 py-10">
-                <h1 className="text-xl font-semibold">Book a Priest</h1>
-                <p className="mt-3 rounded-lg border p-3 text-sm">{error}</p>
-                <button
-                    className="mt-4 rounded-lg bg-black px-4 py-2 text-white"
-                    onClick={() => window.location.reload()}
-                >
-                    Retry
-                </button>
+            <div className="container-main py-10">
+                <div className="mx-auto max-w-3xl rounded-xl border border-red-200 bg-red-50 p-6 dark:border-red-900/50 dark:bg-red-950/20">
+                    <h1 className="text-xl font-semibold text-red-800 dark:text-red-400">Book a Priest</h1>
+                    <p className="mt-3 text-sm text-red-700 dark:text-red-300">{error}</p>
+                    <button
+                        className="mt-4 rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-medium text-[var(--accent-foreground)] hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
+                        onClick={() => window.location.reload()}
+                    >
+                        Retry
+                    </button>
+                </div>
             </div>
         );
     }
@@ -235,10 +241,11 @@ export default function BookPage() {
     const priestName = details?.priest?.user?.name ?? "Priest";
 
     return (
-        <div className="mx-auto max-w-3xl px-4 py-10">
-            <h1 className="text-2xl font-bold">Book a Priest</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-                Booking with <span className="font-medium text-black">{priestName}</span>
+        <div className="container-main py-10">
+            <div className="mx-auto max-w-3xl">
+            <h1 className="text-2xl font-bold text-[var(--foreground)]">Book a Priest</h1>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+                Booking with <span className="font-medium text-[var(--foreground)]">{priestName}</span>
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -249,7 +256,7 @@ export default function BookPage() {
                         <button
                             type="button"
                             onClick={() => setMode("HOME")}
-                            className={`rounded-lg border px-3 py-2 text-sm ${mode === "HOME" ? "bg-black text-white" : ""
+                            className={`rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${mode === "HOME" ? "bg-[var(--accent)] text-[var(--accent-foreground)]" : "border-[var(--border)]"
                                 }`}
                         >
                             Home
@@ -257,7 +264,7 @@ export default function BookPage() {
                         <button
                             type="button"
                             onClick={() => setMode("ONLINE")}
-                            className={`rounded-lg border px-3 py-2 text-sm ${mode === "ONLINE" ? "bg-black text-white" : ""
+                            className={`rounded-lg border px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] ${mode === "ONLINE" ? "bg-[var(--accent)] text-[var(--accent-foreground)]" : "border-[var(--border)]"
                                 }`}
                         >
                             Online
@@ -305,7 +312,7 @@ export default function BookPage() {
                             ))
                         )}
                     </select>
-                    <p className="mt-2 text-xs text-muted-foreground">
+                    <p className="mt-2 text-xs text-[var(--muted-foreground)]">
                         This maps to your backend field: <code>priestServiceId</code>
                     </p>
                 </div>
@@ -397,7 +404,7 @@ export default function BookPage() {
                                 onChange={(e) => setDistanceKm(Number(e.target.value))}
                                 placeholder="Used to calculate travel fee"
                             />
-                            <p className="mt-2 text-xs text-muted-foreground">
+                            <p className="mt-2 text-xs text-[var(--muted-foreground)]">
                                 Your backend charges travel fee if distance &gt; 5km.
                             </p>
                         </div>
@@ -419,11 +426,12 @@ export default function BookPage() {
                 <button
                     type="submit"
                     disabled={posting || filteredServices.length === 0}
-                    className="w-full rounded-lg bg-black px-4 py-3 text-white disabled:opacity-60"
+                    className="w-full rounded-lg bg-[var(--accent)] px-4 py-3 text-[var(--accent-foreground)] disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)]"
                 >
                     {posting ? "Creating booking..." : "Confirm Booking"}
                 </button>
             </form>
+            </div>
         </div>
     );
 }

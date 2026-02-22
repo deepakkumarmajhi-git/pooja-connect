@@ -1,65 +1,110 @@
-import Image from "next/image";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { BookOpen, Users, Calendar, Shield } from "lucide-react";
+import { authOptions } from "@/lib/auth";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+  if (session?.user) {
+    const role = (session.user as { role?: string }).role;
+    if (role === "ADMIN") redirect("/admin");
+    if (role === "PRIEST") redirect("/dashboard/priest");
+    redirect("/dashboard/customer");
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex flex-col">
+      <section className="container-main py-20 md:py-28">
+        <div className="mx-auto max-w-2xl text-center">
+          <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-4xl md:text-5xl">
+            Book verified priests for pujas
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="mt-5 text-base text-[var(--muted-foreground)] leading-relaxed">
+            Choose a puja, pick a priest or let us assign one, and book at home or online.
           </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/pujas"
+              className="inline-flex h-11 items-center justify-center rounded-lg bg-[var(--accent)] px-5 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
+            >
+              Browse Pujas
+            </Link>
+            <Link
+              href="/auth"
+              className="inline-flex h-11 items-center justify-center rounded-lg border border-[var(--border)] px-5 text-sm font-medium transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
+            >
+              Sign in
+            </Link>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </section>
+
+      <section className="border-t border-[var(--border)] py-16">
+        <div className="container-main">
+          <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="text-center">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                <BookOpen className="h-5 w-5 text-[var(--muted-foreground)]" aria-hidden />
+              </div>
+              <h3 className="mt-4 text-sm font-medium text-[var(--foreground)]">Puja catalog</h3>
+              <p className="mt-2 text-xs text-[var(--muted-foreground)] leading-relaxed">
+                Fixed pujas with clear pricing.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                <Users className="h-5 w-5 text-[var(--muted-foreground)]" aria-hidden />
+              </div>
+              <h3 className="mt-4 text-sm font-medium text-[var(--foreground)]">Verified priests</h3>
+              <p className="mt-2 text-xs text-[var(--muted-foreground)] leading-relaxed">
+                Approved priests with experience.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                <Calendar className="h-5 w-5 text-[var(--muted-foreground)]" aria-hidden />
+              </div>
+              <h3 className="mt-4 text-sm font-medium text-[var(--foreground)]">Easy booking</h3>
+              <p className="mt-2 text-xs text-[var(--muted-foreground)] leading-relaxed">
+                Pick date, add-ons, get confirmed.
+              </p>
+            </div>
+            <div className="text-center">
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg bg-slate-100">
+                <Shield className="h-5 w-5 text-[var(--muted-foreground)]" aria-hidden />
+              </div>
+              <h3 className="mt-4 text-sm font-medium text-[var(--foreground)]">Transparent</h3>
+              <p className="mt-2 text-xs text-[var(--muted-foreground)] leading-relaxed">
+                Clear pricing, no hidden charges.
+              </p>
+            </div>
+          </div>
         </div>
-      </main>
+      </section>
+
+      <section className="container-main py-16">
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--card)] px-6 py-10 text-center md:px-12 md:py-12">
+          <h2 className="text-xl font-semibold text-[var(--foreground)]">Ready to book?</h2>
+          <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+            Sign in or browse pujas to get started.
+          </p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/pujas"
+              className="inline-flex h-10 items-center justify-center rounded-lg bg-[var(--accent)] px-4 text-sm font-medium text-[var(--accent-foreground)] transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
+            >
+              Browse Pujas
+            </Link>
+            <Link
+              href="/auth"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-[var(--border)] px-4 text-sm font-medium transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring)] focus-visible:ring-offset-2"
+            >
+              Sign in
+            </Link>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

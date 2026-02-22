@@ -1,23 +1,29 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-type Booking = any;
+type Booking = Record<string, unknown>;
 
 export default function PriestBookingsPage() {
   const [items, setItems] = useState<Booking[]>([]);
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
 
   async function load() {
     setMsg("");
+    setLoading(true);
     const res = await fetch("/api/priest/bookings", { cache: "no-store" });
     const data = await res.json();
     if (!res.ok) {
       setMsg(data?.error || "Failed to load bookings");
       setItems([]);
-      return;
+    } else {
+      setItems(data.items || []);
     }
-    setItems(data.items || []);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -34,58 +40,79 @@ export default function PriestBookingsPage() {
     load();
   }
 
+  const statusVariant = (s: string) => {
+    const u = String(s).toUpperCase();
+    if (u === "CONFIRMED") return "success";
+    if (u === "COMPLETED") return "secondary";
+    if (u === "CANCELLED" || u === "REJECTED") return "destructive";
+    return "warning";
+  };
+
   return (
-    <div style={{ padding: 24, maxWidth: 1000 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Bookings</h1>
+    <div className="max-w-4xl">
+      <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">Bookings</h1>
+      <p className="mt-2 text-[var(--muted-foreground)]">
+        View and accept booking requests.
+      </p>
 
       {msg ? (
-        <div style={{ marginTop: 12, padding: 10, borderRadius: 10, background: "#f6f6f6" }}>
+        <div
+          className="mt-6 rounded-lg border border-[var(--border)] bg-slate-50 p-4 text-sm dark:bg-slate-800"
+          role="alert"
+        >
           {msg}
         </div>
       ) : null}
 
-      <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-        {items.length === 0 ? (
-          <div style={{ color: "#666" }}>No bookings yet.</div>
-        ) : (
-          items.map((b: any) => (
-            <div key={String(b._id)} style={{ border: "1px solid #e5e5e5", borderRadius: 14, padding: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-                <div style={{ fontWeight: 900 }}>{b.catalogSlug}</div>
-                <div style={{ fontWeight: 900 }}>{b.status}</div>
-              </div>
-
-              <div style={{ marginTop: 6, color: "#444" }}>
-                Mode: {b.mode} • Scheduled: {new Date(b.scheduledAt).toLocaleString()}
-              </div>
-
-              <div style={{ marginTop: 6, color: "#666" }}>
-                Total: ₹{b?.pricing?.total} • Payment: {b?.payment?.status}
-              </div>
-
-              {b.status === "PENDING_PRIEST" ? (
-                <button
-                  onClick={() => accept(String(b._id))}
-                  style={{
-                    marginTop: 10,
-                    padding: "10px 14px",
-                    borderRadius: 10,
-                    border: "none",
-                    background: "#000",
-                    color: "#fff",
-                    cursor: "pointer",
-                    fontWeight: 900,
-                  }}
-                >
-                  Accept Booking
-                </button>
-              ) : null}
-            </div>
-          ))
-        )}
-      </div>
+      {loading ? (
+        <div className="mt-8 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="py-6">
+                <div className="h-5 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="mt-2 h-4 w-full animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <Card className="mt-8">
+          <CardContent className="py-10 text-center text-[var(--muted-foreground)]">
+            No bookings yet.
+          </CardContent>
+        </Card>
+      ) : (
+        <ul className="mt-8 grid gap-4">
+          {items.map((b: Booking) => (
+            <li key={String(b._id)}>
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="font-semibold">{String(b.catalogSlug)}</span>
+                    <Badge variant={statusVariant(String(b.status))}>{String(b.status)}</Badge>
+                  </div>
+                  <p className="text-sm text-[var(--muted-foreground)]">
+                    Mode: {String(b.mode)} • Scheduled:{" "}
+                    {b.scheduledAt ? new Date(b.scheduledAt as string).toLocaleString() : "—"}
+                  </p>
+                  <p className="text-xs text-[var(--muted-foreground)]">
+                    Total: ₹{(b.pricing as { total?: number })?.total ?? "—"} • Payment:{" "}
+                    {(b.payment as { status?: string })?.status ?? "—"}
+                  </p>
+                  {String(b.status) === "PENDING_PRIEST" ? (
+                    <Button
+                      className="mt-4"
+                      onClick={() => accept(String(b._id))}
+                    >
+                      Accept Booking
+                    </Button>
+                  ) : null}
+                </CardHeader>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
-
-// Priest bookings UI (accept button)

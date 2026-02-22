@@ -1,21 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Card, CardHeader } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+
+type RequestItem = { _id: string; bookingId?: string; status?: string };
 
 export default function PriestRequestsPage() {
-  const [items, setItems] = useState<any[]>([]);
+  const [items, setItems] = useState<RequestItem[]>([]);
   const [msg, setMsg] = useState("");
+  const [loading, setLoading] = useState(true);
 
   async function load() {
     setMsg("");
+    setLoading(true);
     const res = await fetch("/api/priest/requests", { cache: "no-store" });
     const data = await res.json();
     if (!res.ok) {
       setMsg(data?.error || "Failed to load requests");
       setItems([]);
-      return;
+    } else {
+      setItems(data.items || []);
     }
-    setItems(data.items || []);
+    setLoading(false);
   }
 
   useEffect(() => {
@@ -37,38 +44,62 @@ export default function PriestRequestsPage() {
   }
 
   return (
-    <div style={{ padding: 24, maxWidth: 1000 }}>
-      <h1 style={{ fontSize: 26, fontWeight: 900 }}>Booking Requests</h1>
+    <div className="max-w-4xl">
+      <h1 className="text-2xl font-bold tracking-tight text-[var(--foreground)]">
+        Booking Requests
+      </h1>
+      <p className="mt-2 text-[var(--muted-foreground)]">
+        Accept or decline incoming requests.
+      </p>
 
-      {msg ? <div style={{ marginTop: 12, padding: 10, borderRadius: 10, background: "#f6f6f6" }}>{msg}</div> : null}
+      {msg ? (
+        <div
+          className="mt-6 rounded-lg border border-[var(--border)] bg-slate-50 p-4 text-sm dark:bg-slate-800"
+          role="alert"
+        >
+          {msg}
+        </div>
+      ) : null}
 
-      <div style={{ marginTop: 14, display: "grid", gap: 10 }}>
-        {items.length === 0 ? (
-          <div style={{ color: "#666" }}>No requests right now.</div>
-        ) : (
-          items.map((r) => (
-            <div key={String(r._id)} style={{ border: "1px solid #e5e5e5", borderRadius: 14, padding: 14 }}>
-              <div style={{ fontWeight: 900 }}>Request: {String(r.bookingId)}</div>
-              <div style={{ marginTop: 6, color: "#666" }}>Status: {r.status}</div>
-
-              <div style={{ marginTop: 10, display: "flex", gap: 10, flexWrap: "wrap" }}>
-                <button
-                  onClick={() => accept(String(r._id))}
-                  style={{ padding: "10px 14px", borderRadius: 10, border: "none", background: "#000", color: "#fff", fontWeight: 900, cursor: "pointer" }}
-                >
-                  Accept
-                </button>
-                <button
-                  onClick={() => decline(String(r._id))}
-                  style={{ padding: "10px 14px", borderRadius: 10, border: "1px solid #e5e5e5", background: "white", fontWeight: 900, cursor: "pointer" }}
-                >
-                  Decline
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      {loading ? (
+        <div className="mt-8 space-y-4">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardHeader>
+                <div className="h-5 w-48 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+                <div className="mt-2 h-4 w-3/4 animate-pulse rounded bg-slate-200 dark:bg-slate-800" />
+              </CardHeader>
+            </Card>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
+        <Card className="mt-8">
+          <CardHeader>
+            <p className="py-6 text-center text-[var(--muted-foreground)]">
+              No requests right now.
+            </p>
+          </CardHeader>
+        </Card>
+      ) : (
+        <ul className="mt-8 grid gap-4">
+          {items.map((r) => (
+            <li key={String(r._id)}>
+              <Card>
+                <CardHeader className="pb-2">
+                  <p className="font-semibold">Request: {String(r.bookingId)}</p>
+                  <p className="text-sm text-[var(--muted-foreground)]">Status: {r.status}</p>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    <Button onClick={() => accept(String(r._id))}>Accept</Button>
+                    <Button variant="outline" onClick={() => decline(String(r._id))}>
+                      Decline
+                    </Button>
+                  </div>
+                </CardHeader>
+              </Card>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
